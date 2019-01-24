@@ -1,32 +1,38 @@
 import React, { Component } from 'react';
+
 import { withTracker } from 'meteor/react-meteor-data';
+import { Meteor } from 'meteor/meteor';
+
 import Links from '../api/links';
 
 class Info extends Component {
-  render() {
-    const links = this.props.links.map(
-      link => this.makeLink(link)
-    );
+    render() {
+        const { subsLoading, loggingIn, numberOfLinks } = this.props;
 
-    return (
-      <div>
-        <h2>Learn Meteor!</h2>
-        <ul>{ links }</ul>
-      </div>
-    );
-  }
+        if (loggingIn) {
+            return <div>logging in</div>;
+        }
 
-  makeLink(link) {
-    return (
-      <li key={link._id}>
-        <a href={link.url} target="_blank">{link.title}</a>
-      </li>
-    );
-  }
+        if (subsLoading) {
+            return <div>subs loading</div>;
+        }
+
+        return (
+            <div>
+                <h1>number of links: {numberOfLinks}</h1>
+            </div>
+        );
+    }
 }
 
-export default InfoContainer = withTracker(() => {
-  return {
-    links: Links.find().fetch(),
-  };
-})(Info);
+export default (InfoContainer = withTracker(() => {
+    const sub = Meteor.subscribe('links.list');
+
+    console.log(sub.ready(), Meteor.loggingIn());
+
+    return {
+        subsLoading: !sub.ready(),
+        loggingIn: Meteor.loggingIn(),
+        numberOfLinks: Links.find().count(),
+    };
+})(Info));
